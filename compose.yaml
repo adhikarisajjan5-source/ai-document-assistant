@@ -1,0 +1,43 @@
+services:
+
+  postgres:
+    image: pgvector/pgvector:pg17
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_DB: ai_document_db
+      POSTGRES_USER: ai_document_user
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+
+    volumes:
+      - ai-document-postgres-data:/var/lib/postgresql/data
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ai_document_user -d ai_document_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+
+  app:
+    build: .
+    image: ai-document-assistant
+    restart: unless-stopped
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    ports:
+      - "8080:8080"
+
+    environment:
+      DB_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/ai_document_db
+      SPRING_AI_OLLAMA_BASE_URL: http://host.docker.internal:11434
+
+
+volumes:
+  ai-document-postgres-data:
+    external: true

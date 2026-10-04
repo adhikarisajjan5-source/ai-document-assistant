@@ -34,9 +34,11 @@ services:
     environment:
       DB_PASSWORD: ${DB_PASSWORD}
       JWT_SECRET: ${JWT_SECRET}
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/ai_document_db
-      SPRING_AI_OLLAMA_BASE_URL: http://host.docker.internal:11434
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
 
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/ai_document_db
+      SPRING_DATASOURCE_USERNAME: ai_document_user
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
 
 volumes:
   ai-document-postgres-data:

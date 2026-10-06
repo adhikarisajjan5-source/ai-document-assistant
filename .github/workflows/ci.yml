@@ -43,6 +43,8 @@ jobs:
 
       - name: Run Maven tests
         env:
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/ai_document_db
+          SPRING_DATASOURCE_USERNAME: ai_document_user
           DB_PASSWORD: test_password
           JWT_SECRET: test-jwt-secret-key-for-ci-testing-only-123456789
           OPENAI_API_KEY: test-openai-key

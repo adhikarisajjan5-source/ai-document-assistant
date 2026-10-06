@@ -9,6 +9,9 @@ services:
       POSTGRES_USER: ai_document_user
       POSTGRES_PASSWORD: ${DB_PASSWORD}
 
+    ports:
+      - "5432:5432"
+
     volumes:
       - ai-document-postgres-data:/var/lib/postgresql/data
 

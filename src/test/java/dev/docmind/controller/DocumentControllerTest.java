@@ -1,7 +1,9 @@
 package dev.docmind.controller;
 
 import dev.docmind.support.TestAuthHelper;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -16,6 +18,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class DocumentControllerTest {
 
     @Autowired
@@ -24,6 +27,23 @@ class DocumentControllerTest {
     @Autowired
     private TestAuthHelper testAuthHelper;
 
+    private String token;
+
+    @BeforeAll
+    void setUp() throws Exception {
+
+        testAuthHelper.registerTestUser(
+                mockMvc,
+                "test@example.com",
+                "testpass123"
+        );
+
+        token = testAuthHelper.getLoginToken(
+                mockMvc,
+                "test@example.com",
+                "testpass123"
+        );
+    }
 
     @Test
     void getDocumentsWithoutTokenReturns401() throws Exception {
@@ -41,7 +61,6 @@ class DocumentControllerTest {
                                 .value("Authentication is required")
                 );
     }
-
 
     @Test
     void uploadWithoutTokenReturns401() throws Exception {
@@ -61,16 +80,8 @@ class DocumentControllerTest {
                 .andExpect(status().isUnauthorized());
     }
 
-
     @Test
     void authenticatedUserCanGetDocuments() throws Exception {
-
-        String token =
-                testAuthHelper.getLoginToken(
-                        mockMvc,
-                        "test@example.com",
-                        "sajjan"
-                );
 
         mockMvc.perform(
                         get("/api/documents")
@@ -82,16 +93,8 @@ class DocumentControllerTest {
                 .andExpect(status().isOk());
     }
 
-
     @Test
     void authenticatedEmptyPdfUploadReturns400() throws Exception {
-
-        String token =
-                testAuthHelper.getLoginToken(
-                        mockMvc,
-                        "test@example.com",
-                        "sajjan"
-                );
 
         MockMultipartFile file =
                 new MockMultipartFile(
@@ -116,16 +119,8 @@ class DocumentControllerTest {
                 );
     }
 
-
     @Test
     void authenticatedNonPdfUploadReturns400() throws Exception {
-
-        String token =
-                testAuthHelper.getLoginToken(
-                        mockMvc,
-                        "test@example.com",
-                        "sajjan"
-                );
 
         MockMultipartFile file =
                 new MockMultipartFile(

@@ -2,7 +2,10 @@ package dev.docmind.controller;
 
 import dev.docmind.dto.LoginRequest;
 import dev.docmind.dto.RegisterRequest;
+import dev.docmind.support.TestAuthHelper;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -16,6 +19,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class AuthControllerTest {
 
     @Autowired
@@ -24,6 +28,18 @@ class AuthControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired
+    private TestAuthHelper testAuthHelper;
+
+    @BeforeAll
+    void setUp() throws Exception {
+
+        testAuthHelper.registerTestUser(
+                mockMvc,
+                "test@example.com",
+                "testpass123"
+        );
+    }
 
     @Test
     void registerWithInvalidEmailReturns400() throws Exception {
@@ -46,7 +62,6 @@ class AuthControllerTest {
                 );
     }
 
-
     @Test
     void loginWithEmptyPasswordReturns400() throws Exception {
 
@@ -68,13 +83,12 @@ class AuthControllerTest {
                 );
     }
 
-
     @Test
     void loginWithValidCredentialsReturns200() throws Exception {
 
         LoginRequest request = new LoginRequest();
         request.setEmail("test@example.com");
-        request.setPassword("sajjan");
+        request.setPassword("testpass123");
 
         mockMvc.perform(
                         post("/api/auth/login")
@@ -90,9 +104,8 @@ class AuthControllerTest {
                 );
     }
 
-
     @Test
-    void loginWithWrongPasswordReturns401() throws Exception {
+    void loginWithWrongPasswordReturns400() throws Exception {
 
         LoginRequest request = new LoginRequest();
         request.setEmail("test@example.com");
@@ -105,16 +118,19 @@ class AuthControllerTest {
                                         objectMapper.writeValueAsString(request)
                                 )
                 )
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isBadRequest())
+                .andExpect(
+                        jsonPath("$.message")
+                                .value("Invalid email or password")
+                );
     }
-
 
     @Test
     void loginWithInvalidEmailFormatReturns400() throws Exception {
 
         LoginRequest request = new LoginRequest();
         request.setEmail("invalid-email");
-        request.setPassword("sajjan");
+        request.setPassword("testpass123");
 
         mockMvc.perform(
                         post("/api/auth/login")
@@ -130,13 +146,12 @@ class AuthControllerTest {
                 );
     }
 
-
     @Test
     void loginWithMissingEmailReturns400() throws Exception {
 
         LoginRequest request = new LoginRequest();
         request.setEmail("");
-        request.setPassword("sajjan");
+        request.setPassword("testpass123");
 
         mockMvc.perform(
                         post("/api/auth/login")

@@ -20,6 +20,49 @@ public class TestAuthHelper {
         this.objectMapper = objectMapper;
     }
 
+    public void registerTestUser(
+            MockMvc mockMvc,
+            String email,
+            String password
+    ) throws Exception {
+
+        String registerJson = """
+                {
+                  "email": "%s",
+                  "password": "%s"
+                }
+                """.formatted(email, password);
+
+        MvcResult result = mockMvc.perform(
+                        post("/api/auth/register")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(registerJson)
+                )
+                .andReturn();
+
+        int status = result.getResponse().getStatus();
+
+        // 200 = user created successfully
+        if (status == 200) {
+            return;
+        }
+
+        // 400 can mean the shared test user already exists.
+        // Verify that the existing user can actually log in
+        // with the expected test password.
+        if (status == 400) {
+            getLoginToken(mockMvc, email, password);
+            return;
+        }
+
+        throw new IllegalStateException(
+                "Could not prepare test user. HTTP status: "
+                        + status
+                        + ", response: "
+                        + result.getResponse().getContentAsString()
+        );
+    }
+
     public String getLoginToken(
             MockMvc mockMvc,
             String email,
